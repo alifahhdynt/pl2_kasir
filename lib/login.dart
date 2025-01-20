@@ -23,7 +23,7 @@ class _LoginState extends State<Login> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      _showSnackBar('Email dan password tidak boleh kosong');
+      _showSnackBar('Email dan Password wajib diisi!');
       setState(() {
         _isLoading = false;
       });
@@ -37,13 +37,13 @@ class _LoginState extends State<Login> {
       );
 
       if (response.session != null) {
-        _showSnackBar('Login berhasil');
+        _showSnackBar('Login berhasil!');
         // Arahkan ke halaman utama
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
-        _showSnackBar('Login gagal. Periksa email dan password Anda');
+        _showSnackBar('Login gagal. Periksa email dan password Anda!');
       }
     } catch (error) {
       _showSnackBar('Error: ${error.toString()}');
