@@ -176,7 +176,7 @@ class _EditProdukState extends State<EditProduk> {
                   controller: _stokController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Masukkan harga produk!';
+                      return 'Masukkan stok produk!';
                     }
                     if (num.tryParse(value) == null) {
                       return 'Masukkan angka yang valid!';

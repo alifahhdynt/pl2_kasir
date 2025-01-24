@@ -9,9 +9,9 @@ class transaksiv extends StatelessWidget {
       backgroundColor: const Color(0xffffffff),
       appBar: AppBar(
         elevation: 2,
-        centerTitle: false,
+        centerTitle: true,
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xff6aa647),
+        backgroundColor: const Color(0xff87c15e),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
         ),
@@ -23,11 +23,6 @@ class transaksiv extends StatelessWidget {
             fontSize: 16,
             color: Color(0xffffffff),
           ),
-        ),
-        leading: const Icon(
-          Icons.arrow_back,
-          color: Color(0xffffffff),
-          size: 24,
         ),
       ),
       body: Column(
