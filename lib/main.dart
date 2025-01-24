@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pl2_kasir/login.dart';
-import 'home_page.dart';
+import 'package:pl2_kasir/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {

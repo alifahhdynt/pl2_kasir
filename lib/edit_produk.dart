@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/delete.dart';
-import 'package:pl2_kasir/produk.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProduk extends StatefulWidget {
@@ -59,36 +57,12 @@ class _EditProdukState extends State<EditProduk> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffffffff),
-      appBar: AppBar(
-        elevation: 1,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xff78ab77),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero,
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 400,
         ),
-        title: const Text(
-          "Edit Produk",
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontStyle: FontStyle.normal,
-            fontSize: 16,
-            color: Color(0xffffffff),
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: const Color(0xffffffff),
-          iconSize: 24,
-          onPressed: () {
-            Navigator.pop(context);
-          }, // Kembali ke halaman sebelumnya
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 50),
         child: Form(
           key: _formKey,
           child: Column(
@@ -144,12 +118,15 @@ class _EditProdukState extends State<EditProduk> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+                padding: const EdgeInsets.only(top: 10),
                 child: TextFormField(
                   controller: _hargaController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Harga tidak boleh kosong';
+                      return 'Masukkan harga produk!';
+                    }
+                    if (num.tryParse(value) == null) {
+                      return 'Masukkan angka yang valid!';
                     }
                     return null;
                   },
@@ -194,12 +171,15 @@ class _EditProdukState extends State<EditProduk> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+                padding: const EdgeInsets.only(top: 10),
                 child: TextFormField(
                   controller: _stokController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Stok tidak boleh kosong!';
+                      return 'Masukkan harga produk!';
+                    }
+                    if (num.tryParse(value) == null) {
+                      return 'Masukkan angka yang valid!';
                     }
                     return null;
                   },
@@ -244,35 +224,34 @@ class _EditProdukState extends State<EditProduk> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 80, 0, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    MaterialButton(
-                      onPressed: update,
-                      color: const Color(0xffacc6aa),
+                padding: const EdgeInsets.only(top: 10),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await update(); 
+                      setState(() {});
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xffacc6aa),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         side: const BorderSide(
-                            color: Color(0xff808080), width: 1),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      textColor: const Color(0xffffffff),
-                      height: 40,
-                      minWidth: 100,
-                      child: const Text(
-                        "Simpan",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          fontStyle: FontStyle.normal,
+                          color: Color(0xff808080),
+                          width: 1,
                         ),
                       ),
                     ),
-                  ],
+                    child: const Text(
+                      "Simpan",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffffffff), // Properti untuk warna teks
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

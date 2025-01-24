@@ -94,7 +94,7 @@ class _LoginState extends State<Login> {
                 const Padding(
                   padding: EdgeInsets.fromLTRB(0, 10, 0, 40),
                   child: Text(
-                    "Login",
+                    "Login Petugas",
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 25,
