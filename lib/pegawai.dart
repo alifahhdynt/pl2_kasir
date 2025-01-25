@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pl2_kasir/TambahPegawai.dart';
 import 'package:pl2_kasir/delete.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -54,7 +55,7 @@ class PegawaiState extends State<Pegawai> {
         padding: const EdgeInsets.all(10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.max,
           children: [
             Expanded(
@@ -92,7 +93,7 @@ class PegawaiState extends State<Pegawai> {
                             color: Color(0x4d9e9e9e), width: 1),
                       ),
                       trailing: SizedBox(
-                        width: 100, // Tentukan lebar sesuai kebutuhan
+                        width: 100, 
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -143,19 +144,30 @@ class PegawaiState extends State<Pegawai> {
                 },
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {},
-                  color: const Color(0xff212435),
-                  iconSize: 40,
+            FloatingActionButton(
+                backgroundColor: const Color(
+                  0xff87c15e,
                 ),
-              ],
-            ),
+                elevation: 2,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Tambah Pegawai'),
+                        content: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                              maxWidth: 400, maxHeight: 300),
+                          child: TambahPegawai(),
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                )),
           ],
         ),
       ),
