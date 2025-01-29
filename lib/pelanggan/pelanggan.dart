@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/tambahPegawai.dart';
+import 'package:pl2_kasir/pelanggan/edit_pelanggan.dart';
+import 'package:pl2_kasir/pelanggan/tambah_pelanggan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Pelanggan extends StatefulWidget {
   const Pelanggan({super.key});
 
   @override
-  _PelangganState createState() => _PelangganState();
+  PelangganState createState() => PelangganState();
 }
 
-class _PelangganState extends State<Pelanggan> {
+class PelangganState extends State<Pelanggan> {
   List<Map<String, dynamic>> pelanggans = [];
 
   @override
@@ -73,7 +74,7 @@ class _PelangganState extends State<Pelanggan> {
                   return Column(
                     children: [
                       Card(
-                        color: const Color(0xffa3dd81),
+                        color: const Color.fromARGB(255, 184, 228, 158),
                         shadowColor: const Color(0xff000000),
                         elevation: 2,
                         shape: RoundedRectangleBorder(
@@ -94,7 +95,7 @@ class _PelangganState extends State<Pelanggan> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      '${pelanggan['pelangganID']?.toString() ?? '-'}. ${pelanggan['namaPelanggan'] ?? '-'}',
+                                      pelanggan['namaPelanggan'] ?? '-',
                                       textAlign: TextAlign.start,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -109,19 +110,35 @@ class _PelangganState extends State<Pelanggan> {
                                     children: [
                                       IconButton(
                                         icon: const Icon(Icons.edit),
-                                        onPressed: () {
-                                          debugPrint(
-                                              'Edit pressed for ${pelanggan['pelangganID']}');
+                                        onPressed: () async {
+                                          final result = await
+                                          showDialog<bool>(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: const Text(
+                                                    'Edit Pelanggan'),
+                                                content: ConstrainedBox(
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                          maxWidth: 400,
+                                                          maxHeight: 300),
+                                                  child: EditPelanggan(
+                                                      pelanggan: pelanggan),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                          if (result == true) {
+                                            fetchPelanggan();
+                                          }
                                         },
                                         color: const Color(0xff212435),
                                         iconSize: 20,
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.delete),
-                                        onPressed: () {
-                                          debugPrint(
-                                              'Delete pressed for ${pelanggan['pelangganID']}');
-                                        },
+                                        onPressed: () {},
                                         color: const Color(0xffff0000),
                                         iconSize: 20,
                                       ),
@@ -130,9 +147,23 @@ class _PelangganState extends State<Pelanggan> {
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(left: 15),
+                                padding: const EdgeInsets.only(left: 5),
                                 child: Text(
                                   pelanggan['nomorTelpon'] ?? '-',
+                                  textAlign: TextAlign.start,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w400,
+                                    fontStyle: FontStyle.normal,
+                                    fontSize: 14,
+                                    color: Color(0xff555555),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text(
+                                  'Alamat: ${pelanggan['alamat'] ?? '-'}',
                                   textAlign: TextAlign.start,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -165,8 +196,7 @@ class _PelangganState extends State<Pelanggan> {
                 content: ConstrainedBox(
                   constraints:
                       const BoxConstraints(maxHeight: 300, maxWidth: 400),
-                  child: TambahPegawai(
-                  ),
+                  child: const TambahPelanggan(),
                 ),
               );
             },

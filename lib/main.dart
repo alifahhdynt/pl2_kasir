@@ -4,7 +4,6 @@ import 'package:pl2_kasir/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
-  //setup supabase
   await Supabase.initialize(
     url: 'https://bbwqnewusgvvdoysgdlv.supabase.co',
     anonKey:
@@ -15,7 +14,6 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;

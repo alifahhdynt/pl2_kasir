@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/delete.dart';
-import 'package:pl2_kasir/edit_produk.dart';
+import 'package:pl2_kasir/backend/delete.dart';
+import 'package:pl2_kasir/produk/edit_produk.dart';
 import 'package:pl2_kasir/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -237,7 +237,7 @@ class ProdukState extends State<Produk> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color (0xff87c15e),
+        backgroundColor: const Color(0xff87c15e),
         elevation: 2,
         onPressed: () {
           showDialog(
@@ -316,6 +316,9 @@ class ProdukState extends State<Produk> {
                                 if (value == null || value.isEmpty) {
                                   return 'Masukkan harga produk!';
                                 }
+                                if (num.tryParse(value) == null) {
+                                  return "Masukkan angka yang valid!";
+                                }
                                 return null;
                               },
                               style: const TextStyle(
@@ -365,6 +368,9 @@ class ProdukState extends State<Produk> {
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Masukkan stok produk!';
+                                }
+                                if (num.tryParse(value) == null) {
+                                  return "Masukkan angka yang valid!";
                                 }
                                 return null;
                               },

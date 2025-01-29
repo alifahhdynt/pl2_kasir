@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/pelanggan.dart';
+import 'package:pl2_kasir/home_page.dart';
+// import 'package:pl2_kasir/pelanggan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TambahPelanggan extends StatefulWidget {
   const TambahPelanggan({super.key});
 
+  @override
   TambahPelangganState createState() => TambahPelangganState();
 }
 
@@ -16,8 +18,11 @@ class TambahPelangganState extends State<TambahPelanggan> {
       TextEditingController();
   final TextEditingController _noTelpController = TextEditingController();
 
+    List<Map<String, dynamic>> pelanggan = [];
+
+
   Future<void> addPelanggan() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate()) {
       final namaPelanggan = _namaPelangganController.text;
       final alamat = _alamatPelangganController.text;
       final nomorTelpon = int.tryParse(_noTelpController.text) ?? 0;
@@ -29,7 +34,7 @@ class TambahPelangganState extends State<TambahPelanggan> {
             {
               'namaPelanggan': namaPelanggan,
               'alamat': alamat,
-              'noTelp': nomorTelpon,
+              'nomorTelpon': nomorTelpon,
             },
           ],
         ).select();
@@ -46,7 +51,7 @@ class TambahPelangganState extends State<TambahPelanggan> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const Pelanggan(),
+              builder: (context) => const HomePage(),
             ),
           );
         }
@@ -73,7 +78,7 @@ class TambahPelangganState extends State<TambahPelanggan> {
             Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   TextFormField(
                     controller: _namaPelangganController,
@@ -123,9 +128,15 @@ class TambahPelangganState extends State<TambahPelanggan> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 15),
+                    padding: const EdgeInsets.only(top: 10),
                     child: TextFormField(
                       controller: _alamatPelangganController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Masukkan alamat pelanggan!";
+                        }
+                        return null;
+                      },
                       obscureText: false,
                       textAlign: TextAlign.start,
                       maxLines: 1,
@@ -167,9 +178,18 @@ class TambahPelangganState extends State<TambahPelanggan> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 15),
+                    padding: const EdgeInsets.only(top: 10),
                     child: TextFormField(
                       controller: _noTelpController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Masukkan No. Telp pelanggan!";
+                        }
+                        if (num.tryParse(value) == null) {
+                          return "Masukkan angka yg valid!";
+                        }
+                        return null;
+                      },
                       obscureText: false,
                       textAlign: TextAlign.start,
                       maxLines: 1,
@@ -211,19 +231,18 @@ class TambahPelangganState extends State<TambahPelanggan> {
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(top: 15),
+                    padding: const EdgeInsets.only(top: 10),
                     child: MaterialButton(
-                      onPressed: () {
-                        // Lakukan simpan
-                      },
-                      color: Color(0xff76a975),
+                      onPressed: addPelanggan,
+                      color: const Color(0xff76a975),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        side: BorderSide(color: Color(0xff808080), width: 0),
+                        side: const BorderSide(
+                            color: Color(0xff808080), width: 0),
                       ),
-                      padding: EdgeInsets.all(16),
-                      child: Text(
+                      padding: const EdgeInsets.all(16),
+                      child: const Text(
                         "SIMPAN",
                         style: TextStyle(
                           fontSize: 16,
@@ -231,7 +250,7 @@ class TambahPelangganState extends State<TambahPelanggan> {
                           fontStyle: FontStyle.normal,
                         ),
                       ),
-                      textColor: Color(0xffffffff),
+                      textColor: const Color(0xffffffff),
                       height: 40,
                       minWidth: 140,
                     ),

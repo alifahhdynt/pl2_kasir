@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/TambahPegawai.dart';
-import 'package:pl2_kasir/delete.dart';
+import 'package:pl2_kasir/pegawai/TambahPegawai.dart';
+import 'package:pl2_kasir/backend/delete.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Pegawai extends StatefulWidget {
@@ -82,6 +82,14 @@ class PegawaiState extends State<Pegawai> {
                         ),
                         textAlign: TextAlign.start,
                       ),
+                      subtitle: Text(
+                        'Password: ${item['password'] ?? '-'}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                      ),
                       dense: false,
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 0, horizontal: 16),
@@ -93,7 +101,7 @@ class PegawaiState extends State<Pegawai> {
                             color: Color(0x4d9e9e9e), width: 1),
                       ),
                       trailing: SizedBox(
-                        width: 100, 
+                        width: 100,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [

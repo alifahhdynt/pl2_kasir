@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/pegawai.dart';
-import 'package:pl2_kasir/login.dart';
-import 'package:pl2_kasir/pelanggan.dart';
-import 'package:pl2_kasir/transaksiv.dart';
-// import 'package:pl2_kasir/tambah_produk.dart';
+import 'package:pl2_kasir/pegawai/pegawai.dart';
+import 'package:pl2_kasir/pelanggan/pelanggan.dart';
+import 'package:pl2_kasir/transaksi/transaksiv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-// import 'edit_produk.dart';
-import 'produk.dart';
+import 'package:pl2_kasir/produk/produk.dart';
 
 class FlutterVizBottomNavigationBarModel {
   final IconData icon;
@@ -29,15 +26,12 @@ class _HomePageState extends State<HomePage> {
   String? namaPetugas;
   String? role;
 
-  List<Map<String, dynamic>> produks = [];
-  final user = Supabase.instance.client.auth.currentUser;
-
   // Daftar item untuk Bottom Navigation Bar
   final List<FlutterVizBottomNavigationBarModel> _bottomNavBarItems = [
     FlutterVizBottomNavigationBarModel(icon: Icons.widgets, label: "Produk"),
     FlutterVizBottomNavigationBarModel(
         icon: Icons.add_shopping_cart, label: "Transaksi"),
-        FlutterVizBottomNavigationBarModel(icon: Icons.perm_contact_calendar_sharp, label: "Petugas"),
+        FlutterVizBottomNavigationBarModel(icon: Icons.perm_contact_calendar_sharp, label: "Pegawai"),
     FlutterVizBottomNavigationBarModel(
         icon: Icons.people_alt_rounded, label: "Pelanggan"),
         FlutterVizBottomNavigationBarModel(icon: Icons.manage_accounts_rounded, label: "Profile"),
@@ -47,8 +41,8 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const Produk(), 
     const transaksiv(), 
-    Pegawai(),
-    Pelanggan(),
+    const Pegawai(),
+    const Pelanggan(),
 
   ];
 
@@ -111,57 +105,6 @@ class _HomePageState extends State<HomePage> {
         },
       ),
       body: _pages[_currentIndex],
-      // appBar: PreferredSize(
-      //   preferredSize: const Size.fromHeight(55),
-      //   child: Container(
-      //     width: double.infinity,
-      //     decoration: BoxDecoration(
-      //       color: Colors.green[600],
-      //       border: Border.all(color: const Color(0x4d9e9e9e), width: 1),
-      //     ),
-      //     child: Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      //       child: Row(
-      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //         children: [
-      //           Row(
-      //             children: [
-      //               const Icon(
-      //                 Icons.account_circle,
-      //                 color: Colors.white,
-      //                 size: 45,
-      //               ),
-      //               const SizedBox(width: 8),
-      //               Text(
-      //                 namaPetugas ?? "Memuat...",
-      //                 style: const TextStyle(
-      //                   fontWeight: FontWeight.w600,
-      //                   fontSize: 18,
-      //                   color: Colors.white,
-      //                 ),
-      //               ),
-      //             ],
-      //           ),
-      //           Row(
-      //             children: [
-      //               IconButton(
-      //                 icon: const Icon(Icons.login, color: Colors.white),
-      //                 onPressed: () async {
-      //                   await Supabase.instance.client.auth.signOut();
-      //                   Navigator.pushReplacement(
-      //                     context,
-      //                     MaterialPageRoute(
-      //                         builder: (context) => const Login()),
-      //                   );
-      //                 },
-      //               ),
-      //             ],
-      //           ),
-      //         ],
-      //       ),
-      //     ),
-      //   ),
-      // ),
     );
   }
 }

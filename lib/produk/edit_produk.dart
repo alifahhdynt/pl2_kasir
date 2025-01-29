@@ -45,11 +45,13 @@ class _EditProdukState extends State<EditProduk> {
 
     if (respon == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data gagal diperbarui!')),
+        const SnackBar(
+          content: Text('Data gagal diperbarui!'),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Data berhasil diperbarui!')),
+        const SnackBar(content: Text('Data berhasil diperbarui!')),
       );
       Navigator.pop(context, true);
     }
@@ -229,7 +231,7 @@ class _EditProdukState extends State<EditProduk> {
                   alignment: Alignment.bottomCenter,
                   child: ElevatedButton(
                     onPressed: () async {
-                      await update(); 
+                      await update();
                       setState(() {});
                     },
                     style: ElevatedButton.styleFrom(
@@ -244,7 +246,7 @@ class _EditProdukState extends State<EditProduk> {
                       ),
                     ),
                     child: const Text(
-                      "Simpan",
+                      "SIMPAN",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

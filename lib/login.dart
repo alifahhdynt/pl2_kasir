@@ -38,7 +38,6 @@ class _LoginState extends State<Login> {
 
       if (response.session != null) {
         _showSnackBar('Login berhasil!');
-        // Arahkan ke halaman utama
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => HomePage()),
         );
