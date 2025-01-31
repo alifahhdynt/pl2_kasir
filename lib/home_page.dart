@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pl2_kasir/pegawai/pegawai.dart';
 import 'package:pl2_kasir/pelanggan/pelanggan.dart';
-import 'package:pl2_kasir/transaksi/transaksiv.dart';
+import 'package:pl2_kasir/transaksi/transaksi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pl2_kasir/produk/produk.dart';
 
@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
   // Halaman yang akan ditampilkan
   final List<Widget> _pages = [
     const Produk(), 
-    const transaksiv(), 
+    const Transaksi(), 
     const Pegawai(),
     const Pelanggan(),
 

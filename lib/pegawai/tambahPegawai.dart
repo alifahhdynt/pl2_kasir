@@ -45,7 +45,7 @@ class TambahPegawaiState extends State<TambahPegawai> {
             'account_id': accountId,
             'nama': namaPegawai,
             'password':
-                passwordPegawai, // Simpan password plaintext (opsi tidak aman)
+                passwordPegawai, // Simpan password 
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
