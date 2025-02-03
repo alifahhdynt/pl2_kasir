@@ -14,3 +14,10 @@ Future<void> deletePegawai(int petugasID) async {
       .delete()
       .eq('petugasID', petugasID);
 }
+
+Future<void> deletePelanggan(int pelangganID) async {
+  await Supabase.instance.client
+      .from('pelanggan')
+      .delete()
+      .eq('pelangganID', pelangganID);
+}

@@ -27,24 +27,10 @@ class _HomePageState extends State<HomePage> {
   String? role;
 
   // Daftar item untuk Bottom Navigation Bar
-  final List<FlutterVizBottomNavigationBarModel> _bottomNavBarItems = [
-    FlutterVizBottomNavigationBarModel(icon: Icons.widgets, label: "Produk"),
-    FlutterVizBottomNavigationBarModel(
-        icon: Icons.add_shopping_cart, label: "Transaksi"),
-        FlutterVizBottomNavigationBarModel(icon: Icons.perm_contact_calendar_sharp, label: "Pegawai"),
-    FlutterVizBottomNavigationBarModel(
-        icon: Icons.people_alt_rounded, label: "Pelanggan"),
-        FlutterVizBottomNavigationBarModel(icon: Icons.manage_accounts_rounded, label: "Profile"),
-  ];
+  List<FlutterVizBottomNavigationBarModel> _bottomNavBarItems = [];
 
   // Halaman yang akan ditampilkan
-  final List<Widget> _pages = [
-    const Produk(), 
-    const Transaksi(), 
-    const Pegawai(),
-    const Pelanggan(),
-
-  ];
+  List<Widget> _pages = [];
 
   // Fungsi untuk mengambil data petugas
   Future<void> fetchPetugas() async {
@@ -64,9 +50,44 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         namaPetugas = response['nama'];
         role = response['role'];
+        configureNavigationBar();
       });
     } catch (error) {
       throw Exception('Gagal mengambil data petugas: $error');
+    }
+  }
+
+  void configureNavigationBar() {
+    if (role == 'admin') {
+      _bottomNavBarItems = [
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.widgets, label: "Produk"),
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.perm_contact_calendar_sharp, label: "Pegawai"),
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.people_alt_rounded, label: "Pelanggan"),
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.manage_accounts_rounded, label: "Profile"),
+      ];
+      _pages = [
+        const Produk(),
+        const Pegawai(),
+        const Pelanggan(),
+      ];
+    } else if (role == 'petugas') {
+      _bottomNavBarItems = [
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.widgets, label: "Produk"),
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.add_shopping_cart, label: "Transaksi"),
+        FlutterVizBottomNavigationBarModel(
+            icon: Icons.manage_accounts_rounded, label: "Profile"),
+      ];
+
+      _pages = [
+        const Produk(),
+        const Transaksi(),
+      ];
     }
   }
 
@@ -81,30 +102,34 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xffffffff),
       // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        items: _bottomNavBarItems.map((item) {
-          return BottomNavigationBarItem(
-            icon: Icon(item.icon),
-            label: item.label,
-          );
-        }).toList(),
-        backgroundColor: const Color(0xffffffff),
-        currentIndex: _currentIndex,
-        elevation: 8,
-        iconSize: 24,
-        selectedItemColor: const Color(0xff608463),
-        unselectedItemColor: const Color(0xff9e9e9e),
-        selectedFontSize: 14,
-        unselectedFontSize: 14,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index; // Menetapkan halaman yang aktif
-          });
-        },
-      ),
-      body: _pages[_currentIndex],
+      bottomNavigationBar: _bottomNavBarItems.isNotEmpty
+          ? BottomNavigationBar(
+              items: _bottomNavBarItems.map((item) {
+                return BottomNavigationBarItem(
+                  icon: Icon(item.icon),
+                  label: item.label,
+                );
+              }).toList(),
+              backgroundColor: const Color(0xffffffff),
+              currentIndex: _currentIndex,
+              elevation: 8,
+              iconSize: 24,
+              selectedItemColor: const Color(0xff608463),
+              unselectedItemColor: const Color(0xff9e9e9e),
+              selectedFontSize: 14,
+              unselectedFontSize: 14,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index; // Menetapkan halaman yang aktif
+                });
+              },
+            )
+          : null,
+      body: _pages.isNotEmpty
+          ? _pages[_currentIndex]
+          : const Center(child: CircularProgressIndicator()),
     );
   }
 }

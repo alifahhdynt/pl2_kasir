@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pl2_kasir/transaksi/detailTransaksi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Transaksi extends StatefulWidget {
@@ -11,13 +12,17 @@ class Transaksi extends StatefulWidget {
 class TransaksiState extends State<Transaksi> {
   final TextEditingController _produkController = TextEditingController();
   final produkController = Supabase.instance.client;
-
   List<Map<String, dynamic>> listProduk = [];
   List<Map<String, dynamic>> listPesanan = [];
   List<Map<String, dynamic>> filteredProduk = [];
-
-  int totalProduk = 0;
+  bool showDropdown = false;
   int totalPesanan = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProduks();
+  }
 
   Future<void> fetchProduks() async {
     try {
@@ -27,25 +32,66 @@ class TransaksiState extends State<Transaksi> {
           listProduk = List<Map<String, dynamic>>.from(response);
           filteredProduk = List<Map<String, dynamic>>.from(response);
         });
+      } else {
+        debugPrint("Produk kosong atau response null.");
       }
     } catch (e) {
       debugPrint('Eror mengambil produk: $e');
     }
   }
 
-  Future<void> tambahTransaksi({
-    required int pelangganID,
-    required int totalHarga,
-    required List<Map<String, dynamic>> listPesanan,
-  }) async {
-    try {
-      await produkController.from('penjualan').insert({
-        'tglPenjualan': DateTime.now().toIso8601String(),
-        'totalHarga': totalHarga,
-      });
-    } catch (e) {
-      debugPrint('Eror tambah transaksi: $e');
-    }
+  void addToCart(Map<String, dynamic> produk) {
+    setState(() {
+      var existingProduct = listPesanan
+          .indexWhere((item) => item['produkID'] == produk['produkID']);
+      if (existingProduct >= 0) {
+        listPesanan[existingProduct]['total'] += 1;
+      } else {
+        listPesanan.add({
+          'produkID': produk['produkID'],
+          'namaProduk': produk['namaProduk'],
+          'harga': produk['harga'],
+          'total': 1,
+        });
+      }
+    });
+    kalkulatorTotalPesanan();
+  }
+
+  void updateCartQuantity(int index, int delta) {
+    setState(() {
+      int stokTersedia = listProduk.firstWhere(
+        (produk) => produk['produkID'] == listPesanan[index]['produkID'],
+        orElse: () => {'stok': 0},
+      )['stok'];
+
+      int currentQuantity = listPesanan[index]['total'];
+
+      // Tambahkan delta jika tidak melebihi stok
+      if (delta > 0 && currentQuantity < stokTersedia) {
+        listPesanan[index]['total'] += delta;
+      } else if (delta < 0 && currentQuantity > 1) {
+        listPesanan[index]['total'] += delta;
+      } else if (delta > 0 && currentQuantity >= stokTersedia) {
+        // Keterangan jika melebihi stok tersedia
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Tidak bisa menambah lebih dari stok tersedia!.",
+            ),
+          ),
+        );
+      }
+    });
+
+    kalkulatorTotalPesanan();
+  }
+
+  void removeFromCart(int index) {
+    setState(() {
+      listPesanan.removeAt(index);
+    });
+    kalkulatorTotalPesanan();
   }
 
   void kalkulatorTotalPesanan() {
@@ -58,65 +104,19 @@ class TransaksiState extends State<Transaksi> {
     });
   }
 
-  void addToCart(Map<String, dynamic> produk) {
-    setState(() {
-      var existingProduct =
-          listPesanan.indexWhere((item) => item['id'] == produk['id']);
-      if (existingProduct >= 0) {
-        listPesanan[existingProduct]['total'] += 1;
-      } else {
-        listPesanan.add({
-          'id': produk['id'],
-          'nama': produk['nama'],
-          'harga': produk['harga'],
-          'total': 1,
-        });
-      }
-      totalProduk += 1;
-    });
-    kalkulatorTotalPesanan();
-  }
-
-  void onAdd(int index) {
-    setState(() {
-      listPesanan[index]['total'] += 1;
-      totalProduk += 1;
-    });
-    kalkulatorTotalPesanan();
-  }
-
-  void removeAdd(int index) {
-    setState(() {
-      if (listPesanan[index]['total'] > 1) {
-        listPesanan[index]['total'] -= 1;
-        totalProduk -= 1;
-      } else {
-        listPesanan.removeAt(index);
-        totalProduk -= 1;
-      }
-    });
-    kalkulatorTotalPesanan();
-  }
-
   void filterProduk(String query) {
     setState(() {
       if (query.isEmpty) {
         filteredProduk = List<Map<String, dynamic>>.from(listProduk);
       } else {
-        filteredProduk = listProduk
-            .where((produk) => produk['namaProduk']
-                .toString()
-                .toLowerCase()
-                .contains(query.toLowerCase()))
-            .toList();
+        filteredProduk = listProduk.where((produk) {
+          return produk['namaProduk']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase());
+        }).toList();
       }
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchProduks();
   }
 
   @override
@@ -126,7 +126,6 @@ class TransaksiState extends State<Transaksi> {
       appBar: AppBar(
         elevation: 2,
         centerTitle: true,
-        automaticallyImplyLeading: false,
         backgroundColor: const Color(0xffa7db7b),
         title: const Text(
           "TAMBAH TRANSAKSI",
@@ -137,112 +136,166 @@ class TransaksiState extends State<Transaksi> {
           ),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(5),
-            child: TextField(
-              controller: _produkController,
-              onChanged: (value) {
-                filterProduk(value);
-              },
-              decoration: InputDecoration(
-                hintText: "Cari Produk...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4.0),
-                ),
-                filled: true,
-                fillColor: const Color(0xfff2f2f3),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: filteredProduk.length,
-              itemBuilder: (context, index) {
-                final produk = filteredProduk[index];
-                return ListTile(
-                  title: Text(produk['namaProduk']),
-                  subtitle: Text('Harga: ${produk['harga']}'),
-                  onTap: () {
-                    addToCart(produk);
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: TextField(
+                  controller: _produkController,
+                  onChanged: (value) {
+                    filterProduk(value);
+                    setState(() {
+                      showDropdown = value.isNotEmpty;
+                    });
                   },
-                );
-              },
-            ),
-          ),
-          // List Produk
-          // Expanded(
-          //   child: ListView.builder(
-          //     itemCount: listProduk.length,
-          //     itemBuilder: (context, index) {
-          //       final produk = listProduk[index];
-          //       return ListTile(
-          //         title: Text(produk['namaProduk']),
-          //         subtitle: Text("Rp. ${produk['harga']}"),
-          //         trailing: IconButton(
-          //           icon: const Icon(Icons.add),
-          //           onPressed: () => addToCart(produk),
-          //         ),
-          //       );
-          //     },
-          //   ),
-          // ),
-
-          // Total Pesanan
-          Container(
-            margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0x4dffffff), width: 1),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Total Pesanan",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
-                      ),
+                  decoration: InputDecoration(
+                    hintText: "Cari Produk...",
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                      borderSide: BorderSide.none,
                     ),
-                    Text(
-                      "Rp. $totalPesanan",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                    filled: true,
+                    fillColor: const Color(0xfff2f2f3),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: listPesanan.length,
+                  itemBuilder: (context, index) {
+                    final pesanan = listPesanan[index];
+                    return ListTile(
+                      title: Text(pesanan['namaProduk']),
+                      subtitle: Text(
+                          "Rp. ${pesanan['harga']} x ${pesanan['total']} = Rp. ${pesanan['harga'] * pesanan['total']}"),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => updateCartQuantity(index, -1),
+                            icon: const Icon(Icons.remove, color: Colors.red),
+                          ),
+                          Text('${pesanan['total']}'),
+                          IconButton(
+                            onPressed: () => updateCartQuantity(index, 1),
+                            icon: const Icon(Icons.add, color: Colors.green),
+                          ),
+                          IconButton(
+                            onPressed: () => removeFromCart(index),
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                          ),
+                        ],
                       ),
+                    );
+                  },
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0x4dffffff), width: 1),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Total Pesanan",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              "Rp. $totalPesanan",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        MaterialButton(
+                          elevation: 2,
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailTransaksi(
+                                  // productName: '$listPesanan',
+                                  // productPrice: '$totalPesanan',
+                                ),
+                              ),
+                            );
+                          },
+                          color: const Color(0xffaadb83),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.all(12),
+                          textColor: const Color(0xffffffff),
+                          minWidth: 140,
+                          height: 40,
+                          child: const Text(
+                            "Lanjutkan",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                MaterialButton(
-                  onPressed: () {
-                    tambahTransaksi(
-                      pelangganID: 1, // contoh ID pelanggan statis
-                      totalHarga: totalPesanan,
-                      listPesanan: listPesanan,
-                    );
-                  },
-                  color: const Color(0xffaadb83),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  textColor: const Color(0xffffffff),
-                  child: const Text(
-                    "Lanjutkan",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (showDropdown)
+            Positioned(
+              left: 10,
+              right: 10,
+              top: 70,
+              child: Material(
+                elevation: 4,
+                child: Container(
+                  color: Colors.white,
+                  child: filteredProduk.isEmpty
+                      ? const ListTile(
+                          title: Text("Tidak ada produk yang ditemukan"),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: filteredProduk.length,
+                          itemBuilder: (context, index) {
+                            final produk = filteredProduk[index];
+                            return ListTile(
+                              title: Text(produk['namaProduk']),
+                              subtitle: Text(
+                                  'Rp. ${produk['harga']} - Stok ${produk['stok']}'),
+                              onTap: () {
+                                addToCart(produk);
+                                _produkController.text = produk['namaProduk'];
+                                setState(() {
+                                  showDropdown = false;
+                                });
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ),
         ],
       ),
     );

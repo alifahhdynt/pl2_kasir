@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pl2_kasir/backend/delete.dart';
 import 'package:pl2_kasir/pelanggan/edit_pelanggan.dart';
 import 'package:pl2_kasir/pelanggan/tambah_pelanggan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -111,8 +112,7 @@ class PelangganState extends State<Pelanggan> {
                                       IconButton(
                                         icon: const Icon(Icons.edit),
                                         onPressed: () async {
-                                          final result = await
-                                          showDialog<bool>(
+                                          final result = await showDialog<bool>(
                                             context: context,
                                             builder: (BuildContext context) {
                                               return AlertDialog(
@@ -138,7 +138,41 @@ class PelangganState extends State<Pelanggan> {
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.delete),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) =>
+                                                  AlertDialog(
+                                                    title: const Text('Hapus Data'),
+                                                    content: const Text(
+                                                        'Apakah Anda yakin akan menghapus data?'),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child: const Text('Kembali'),
+                                                      ),
+                                                      TextButton(
+                                                          onPressed: () async {
+                                                            await deletePelanggan(
+                                                                pelanggan[
+                                                                    'pelangganID']);
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                            fetchPelanggan();
+                                                          },
+                                                          child: const Text(
+                                                            'Hapus',
+                                                            style: TextStyle(
+                                                                color:
+                                                                    Colors.red),
+                                                          ))
+                                                    ],
+                                                  ));
+                                        },
                                         color: const Color(0xffff0000),
                                         iconSize: 20,
                                       ),

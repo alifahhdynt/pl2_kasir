@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/home_page.dart';
+import 'package:pl2_kasir/pelanggan/pelanggan.dart';
 // import 'package:pl2_kasir/pelanggan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -51,7 +51,7 @@ class TambahPelangganState extends State<TambahPelanggan> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const HomePage(),
+              builder: (context) => const Pelanggan(),
             ),
           );
         }
