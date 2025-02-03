@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pl2_kasir/transaksi/detailTransaksi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'struk.dart';
+import 'controller.dart';
 
 class Transaksi extends StatefulWidget {
   const Transaksi({super.key});
@@ -15,6 +16,8 @@ class TransaksiState extends State<Transaksi> {
   List<Map<String, dynamic>> listProduk = [];
   List<Map<String, dynamic>> listPesanan = [];
   List<Map<String, dynamic>> filteredProduk = [];
+  List<Map<String, dynamic>> listPelanggan = [];
+  Map<String, dynamic>? selectedPelanggan;
   bool showDropdown = false;
   int totalPesanan = 0;
 
@@ -22,6 +25,7 @@ class TransaksiState extends State<Transaksi> {
   void initState() {
     super.initState();
     fetchProduks();
+    fetchPelanggans();
   }
 
   Future<void> fetchProduks() async {
@@ -40,6 +44,21 @@ class TransaksiState extends State<Transaksi> {
     }
   }
 
+  Future<void> fetchPelanggans() async {
+    try {
+      final response = await produkController.from('pelanggan').select();
+      if (response != null) {
+        setState(() {
+          listPelanggan = List<Map<String, dynamic>>.from(response);
+        });
+      } else {
+        debugPrint("Pelanggan kosong atau response null.");
+      }
+    } catch (e) {
+      debugPrint('Eror mengambil pelanggan: $e');
+    }
+  }
+
   void addToCart(Map<String, dynamic> produk) {
     setState(() {
       var existingProduct = listPesanan
@@ -51,6 +70,7 @@ class TransaksiState extends State<Transaksi> {
           'produkID': produk['produkID'],
           'namaProduk': produk['namaProduk'],
           'harga': produk['harga'],
+          'stok': produk['stok'],
           'total': 1,
         });
       }
@@ -203,6 +223,28 @@ class TransaksiState extends State<Transaksi> {
                 child: Column(
                   children: [
                     Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          DropdownButton<Map<String, dynamic>>(
+                            value: selectedPelanggan,
+                            hint: const Text("Pilih Pelanggan"),
+                            onChanged: (Map<String, dynamic>? newValue) {
+                              setState(() {
+                                selectedPelanggan = newValue;
+                              });
+                            },
+                            items: listPelanggan
+                                .map<DropdownMenuItem<Map<String, dynamic>>>(
+                                    (Map<String, dynamic> pelanggan) {
+                              return DropdownMenuItem<Map<String, dynamic>>(
+                                value: pelanggan,
+                                child: Text(pelanggan['namaPelanggan']),
+                              );
+                            }).toList(),
+                          ),
+                        ]),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -228,13 +270,62 @@ class TransaksiState extends State<Transaksi> {
                         MaterialButton(
                           elevation: 2,
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailTransaksi(
-                                  // productName: '$listPesanan',
-                                  // productPrice: '$totalPesanan',
+                            if (listPesanan.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Belum ada pesanan!"),
                                 ),
+                              );
+                              return;
+                            }
+
+                            showDialog(
+                              context: context,
+                              builder: (context) => StrukDialog(
+                                selectedPelanggan: selectedPelanggan,
+                                listPesanan: listPesanan,
+                                totalPesanan: totalPesanan,
+                                onCancel: () => Navigator.pop(context),
+                                // Di bagian onConfirm dalam Transaksi.dart
+                                onConfirm: () async {
+                                  try {
+                                    final transactionService =
+                                        TransactionService();
+
+                                    await transactionService.addTransaction(
+                                      totalHarga: totalPesanan,
+                                      cartItems: listPesanan,
+                                      pelangganID:
+                                          selectedPelanggan?['pelangganID'],
+                                    );
+
+                                    // Reset state setelah transaksi berhasil
+                                    setState(() {
+                                      listPesanan.clear();
+                                      totalPesanan = 0;
+                                      selectedPelanggan = null;
+                                    });
+
+                                    Navigator.pop(context);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('Transaksi berhasil dicatat!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    Navigator.pop(context);
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.toString()),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             );
                           },
