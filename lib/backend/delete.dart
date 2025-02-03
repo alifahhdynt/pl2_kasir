@@ -8,12 +8,18 @@ Future<void> delete(int produkID) async {
       .eq('produkID', produkID);
 }
 
-Future<void> deletePegawai(int petugasID) async {
-  await Supabase.instance.client
-      .from('petugas')
-      .delete()
-      .eq('petugasID', petugasID);
-}
+// Future<void> deletePegawai(int petugasID, String accountId) async {
+//   // Delete the petugas record
+//   final response = await Supabase.instance.client
+//       .from('petugas')
+//       .delete()
+//       .eq('petugasID', petugasID);
+
+//   if (response.error == null) {
+//     final authResponse =
+//         await Supabase.instance.client.auth.admin.deleteUser(accountId);
+//   }
+// }
 
 Future<void> deletePelanggan(int pelangganID) async {
   await Supabase.instance.client

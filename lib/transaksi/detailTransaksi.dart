@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DetailTransaksi extends StatelessWidget {
+  List<Map<String, dynamic>> detailTransaksi = [];
+
+  Future<void> detailtransaksi(int penjuaalanID) async {
+    try {
+      await Supabase.instance.client
+          .from('detailPenjualan')
+          .select('jumlahProduk, subTotal, produk(namaProduk)')
+          .eq('penjualanID', penjuaalanID);
+    } catch (e) {
+      print('Eror loading detail transaksi: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -9,7 +23,7 @@ class DetailTransaksi extends StatelessWidget {
       appBar: AppBar(
         elevation: 4,
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         backgroundColor: const Color(0xFF4CAF50), // Green color for the app bar
         title: const Text(
           "Detail Transaksi",

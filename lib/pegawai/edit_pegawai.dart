@@ -1,56 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class TambahPegawai extends StatefulWidget {
-  const TambahPegawai({super.key});
+class EditPegawai extends StatefulWidget {
+  final Map<String, dynamic> pegawai;
+
+  const EditPegawai({Key? key, required this.pegawai}) : super(key: key);
 
   @override
-  TambahPegawaiState createState() => TambahPegawaiState();
+  EditPegawaiState createState() => EditPegawaiState();
 }
 
-class TambahPegawaiState extends State<TambahPegawai> {
+class EditPegawaiState extends State<EditPegawai> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _namaPegawaiController = TextEditingController();
-  final TextEditingController _emailPegawaiController = TextEditingController();
-  final TextEditingController _passwordPegawaiController =
-      TextEditingController();
+  late TextEditingController _namaPegawaiController;
+  late TextEditingController _emailPegawaiController;
+  late TextEditingController _passwordPegawaiController;
 
-  List<Map<String, dynamic>> petugas = [];
+  @override
+  void initState() {
+    super.initState();
+    _namaPegawaiController =
+        TextEditingController(text: widget.pegawai['nama']);
+    _emailPegawaiController =
+        TextEditingController(text: widget.pegawai['email']);
+    _passwordPegawaiController =
+        TextEditingController(); // Kosong untuk password
+  }
 
-  Future<void> tambahPetugas() async {
+  @override
+  void dispose() {
+    _namaPegawaiController.dispose();
+    _emailPegawaiController.dispose();
+    _passwordPegawaiController.dispose();
+    super.dispose();
+  }
+
+  Future<void> updatePegawai() async {
     if (_formKey.currentState!.validate()) {
       final namaPegawai = _namaPegawaiController.text;
       final emailPegawai = _emailPegawaiController.text;
       final passwordPegawai = _passwordPegawaiController.text;
 
       try {
-        // Daftarkan email dan password ke autentikasi bawaan Supabase
-        final response = await Supabase.instance.client.auth.signUp(
-          email: emailPegawai,
-          password: passwordPegawai,
-        );
-        if (response.user != null) {
-          final accountId = response.user!.id;
+        final accountId = widget.pegawai['account_id'];
 
-          // Simpan data tambahan ke tabel petugas
-          await Supabase.instance.client.from('petugas').insert({
-            'account_id': accountId,
-            'nama': namaPegawai,
-            'password': passwordPegawai, // Simpan password
-          });
+        // Update nama di tabel petugas
+        await Supabase.instance.client.from('petugas').update({
+          'nama': namaPegawai,
+        }).eq('account_id', accountId);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Petugas berhasil ditambahkan')),
-          );
+        // Jika email diubah dan pengguna sedang login
+        if (emailPegawai.isNotEmpty &&
+            emailPegawai != widget.pegawai['email']) {
+          final currentUser = Supabase.instance.client.auth.currentUser;
+          if (currentUser != null && currentUser.id == accountId) {
+            final response = await Supabase.instance.client.auth.updateUser(
+              UserAttributes(email: emailPegawai),
+            );
 
-          _namaPegawaiController.clear();
-          _emailPegawaiController.clear();
-          _passwordPegawaiController.clear();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal menambahkan petugas')),
-          );
+            if (response != null) {
+              throw Exception('Gagal memperbarui email');
+            }
+          }
         }
+
+        // Jika password diisi, update password pengguna yang sedang login
+        if (passwordPegawai.isNotEmpty) {
+          final currentUser = Supabase.instance.client.auth.currentUser;
+          if (currentUser != null && currentUser.id == accountId) {
+            final response = await Supabase.instance.client.auth.updateUser(
+              UserAttributes(password: passwordPegawai),
+            );
+
+            if (response != null) {
+              throw Exception('Gagal memperbarui password');
+            }
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Petugas berhasil diperbarui')),
+        );
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Terjadi kesalahan: $error')),
@@ -228,7 +258,10 @@ class TambahPegawaiState extends State<TambahPegawai> {
                 padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
               ),
               MaterialButton(
-                onPressed: tambahPetugas,
+                onPressed: () async {
+                  await updatePegawai();
+                  setState(() {});
+                },
                 color: const Color(0xff76a975),
                 elevation: 0,
                 shape: RoundedRectangleBorder(

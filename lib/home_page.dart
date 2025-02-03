@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pl2_kasir/pegawai/pegawai.dart';
 import 'package:pl2_kasir/pelanggan/pelanggan.dart';
+import 'package:pl2_kasir/profil.dart';
 import 'package:pl2_kasir/transaksi/transaksi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pl2_kasir/produk/produk.dart';
@@ -73,6 +74,7 @@ class _HomePageState extends State<HomePage> {
         const Produk(),
         const Pegawai(),
         const Pelanggan(),
+        const ProfilPage()
       ];
     } else if (role == 'petugas') {
       _bottomNavBarItems = [
@@ -84,10 +86,7 @@ class _HomePageState extends State<HomePage> {
             icon: Icons.manage_accounts_rounded, label: "Profile"),
       ];
 
-      _pages = [
-        const Produk(),
-        const Transaksi(),
-      ];
+      _pages = [const Produk(), const Transaksi(), const ProfilPage()];
     }
   }
 

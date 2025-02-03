@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pl2_kasir/pegawai/TambahPegawai.dart';
 import 'package:pl2_kasir/backend/delete.dart';
+import 'package:pl2_kasir/pegawai/edit_pegawai.dart';
+import 'package:pl2_kasir/pelanggan/edit_pelanggan.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Pegawai extends StatefulWidget {
@@ -90,6 +92,7 @@ class PegawaiState extends State<Pegawai> {
                           color: Colors.black,
                         ),
                       ),
+                      
                       dense: false,
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 0, horizontal: 16),
@@ -108,7 +111,26 @@ class PegawaiState extends State<Pegawai> {
                             IconButton(
                               icon: const Icon(Icons.edit,
                                   color: Color(0xff212435), size: 24),
-                              onPressed: () {},
+                              onPressed: () async {
+                                final result = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text('Edit Pelanggan'),
+                                      content: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxHeight: 300,
+                                          maxWidth: 400,
+                                        ),
+                                        child: EditPegawai(pegawai: pegawai[index]),
+                                      ),
+                                    );
+                                  },
+                                );
+                                if (result == true) {
+                                  fetchPegawai();
+                                }
+                              },
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete,
@@ -131,13 +153,13 @@ class PegawaiState extends State<Pegawai> {
                                       ),
                                       TextButton(
                                         onPressed: () async {
-                                          if (item['petugasID'] != null) {
-                                            await deletePegawai(
-                                                item['petugasID']);
-                                            fetchPegawai();
-                                          }
+                                          // if (item['petugasID'] != null) {
+                                          //   await deletePegawai(
+                                          //       item['accountID']);
+                                          //   fetchPegawai();
+                                          // }
                                         },
-                                        child: const Text('Hapus'),
+                                        child: const Text('Hapus', style: TextStyle(color: Colors.red),),
                                       ),
                                     ],
                                   ),
@@ -166,7 +188,7 @@ class PegawaiState extends State<Pegawai> {
                         content: ConstrainedBox(
                           constraints: const BoxConstraints(
                               maxWidth: 400, maxHeight: 300),
-                          child: TambahPegawai(),
+                          child: const TambahPegawai(),
                         ),
                       );
                     },
