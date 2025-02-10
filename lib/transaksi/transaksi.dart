@@ -28,16 +28,21 @@ class TransaksiState extends State<Transaksi> {
     fetchPelanggans();
   }
 
+  @override
+  void dispose() {
+    _produkController.dispose(); // Tambahkan dispose untuk controller
+    super.dispose();
+  }
+
   Future<void> fetchProduks() async {
     try {
       final response = await produkController.from('produk').select();
-      if (response != null) {
+      if (response != null && mounted) {
+        // Periksa mounted
         setState(() {
           listProduk = List<Map<String, dynamic>>.from(response);
-          filteredProduk = List<Map<String, dynamic>>.from(response);
+          filteredProduk = List.from(response);
         });
-      } else {
-        debugPrint("Produk kosong atau response null.");
       }
     } catch (e) {
       debugPrint('Eror mengambil produk: $e');
@@ -47,12 +52,11 @@ class TransaksiState extends State<Transaksi> {
   Future<void> fetchPelanggans() async {
     try {
       final response = await produkController.from('pelanggan').select();
-      if (response != null) {
+      if (response != null && mounted) {
+        // Periksa mounted
         setState(() {
           listPelanggan = List<Map<String, dynamic>>.from(response);
         });
-      } else {
-        debugPrint("Pelanggan kosong atau response null.");
       }
     } catch (e) {
       debugPrint('Eror mengambil pelanggan: $e');
@@ -60,11 +64,14 @@ class TransaksiState extends State<Transaksi> {
   }
 
   void addToCart(Map<String, dynamic> produk) {
+    if (!mounted) return; // Tambahkan pengecekan mounted
+
     setState(() {
-      var existingProduct = listPesanan
+      final existingIndex = listPesanan
           .indexWhere((item) => item['produkID'] == produk['produkID']);
-      if (existingProduct >= 0) {
-        listPesanan[existingProduct]['total'] += 1;
+
+      if (existingIndex >= 0) {
+        listPesanan[existingIndex]['total'] += 1;
       } else {
         listPesanan.add({
           'produkID': produk['produkID'],
@@ -74,68 +81,66 @@ class TransaksiState extends State<Transaksi> {
           'total': 1,
         });
       }
+      _calculateTotal(); // Pindahkan kalkulasi total ke dalam setState
     });
-    kalkulatorTotalPesanan();
   }
 
   void updateCartQuantity(int index, int delta) {
+    if (!mounted) return; // Tambahkan pengecekan mounted
+
     setState(() {
-      int stokTersedia = listProduk.firstWhere(
-        (produk) => produk['produkID'] == listPesanan[index]['produkID'],
+      final produkID = listPesanan[index]['produkID'];
+      final stokTersedia = listProduk.firstWhere(
+        (p) => p['produkID'] == produkID,
         orElse: () => {'stok': 0},
       )['stok'];
 
-      int currentQuantity = listPesanan[index]['total'];
+      final currentQuantity = listPesanan[index]['total'];
 
-      // Tambahkan delta jika tidak melebihi stok
       if (delta > 0 && currentQuantity < stokTersedia) {
         listPesanan[index]['total'] += delta;
       } else if (delta < 0 && currentQuantity > 1) {
         listPesanan[index]['total'] += delta;
-      } else if (delta > 0 && currentQuantity >= stokTersedia) {
-        // Keterangan jika melebihi stok tersedia
+      } else if (delta > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              "Tidak bisa menambah lebih dari stok tersedia!.",
-            ),
+            content: Text("Stok tidak mencukupi!"),
           ),
         );
       }
+      _calculateTotal(); // Pindahkan kalkulasi total ke dalam setState
     });
-
-    kalkulatorTotalPesanan();
   }
 
   void removeFromCart(int index) {
+    if (!mounted) return; // Tambahkan pengecekan mounted
+
     setState(() {
       listPesanan.removeAt(index);
+      _calculateTotal();
     });
-    kalkulatorTotalPesanan();
   }
 
-  void kalkulatorTotalPesanan() {
-    setState(() {
-      totalPesanan = listPesanan.fold(
-        0,
-        (previousValue, item) =>
-            previousValue + (item['harga'] as int) * (item['total'] as int),
-      );
-    });
+  void _calculateTotal() {
+    totalPesanan = listPesanan.fold(
+      0,
+      (sum, item) => sum + (item['harga'] as int) * (item['total'] as int),
+    );
   }
 
   void filterProduk(String query) {
+    if (!mounted) return; // Tambahkan pengecekan mounted
+
     setState(() {
-      if (query.isEmpty) {
-        filteredProduk = List<Map<String, dynamic>>.from(listProduk);
-      } else {
-        filteredProduk = listProduk.where((produk) {
-          return produk['namaProduk']
-              .toString()
-              .toLowerCase()
-              .contains(query.toLowerCase());
-        }).toList();
-      }
+      showDropdown = query.isNotEmpty;
+      filteredProduk = query.isEmpty
+          ? List.from(listProduk)
+          : listProduk.where((produk) {
+              return produk['namaProduk']
+                  .toString()
+                  .toLowerCase()
+                  .contains(query.toLowerCase());
+            }).toList();
     });
   }
 
@@ -164,12 +169,7 @@ class TransaksiState extends State<Transaksi> {
                 padding: const EdgeInsets.all(10),
                 child: TextField(
                   controller: _produkController,
-                  onChanged: (value) {
-                    filterProduk(value);
-                    setState(() {
-                      showDropdown = value.isNotEmpty;
-                    });
-                  },
+                  onChanged: filterProduk,
                   decoration: InputDecoration(
                     hintText: "Cari Produk...",
                     prefixIcon: const Icon(Icons.search),
@@ -214,180 +214,169 @@ class TransaksiState extends State<Transaksi> {
                   },
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0x4dffffff), width: 1),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          DropdownButton<Map<String, dynamic>>(
-                            value: selectedPelanggan,
-                            hint: const Text("Pilih Pelanggan"),
-                            onChanged: (Map<String, dynamic>? newValue) {
-                              setState(() {
-                                selectedPelanggan = newValue;
-                              });
-                            },
-                            items: listPelanggan
-                                .map<DropdownMenuItem<Map<String, dynamic>>>(
-                                    (Map<String, dynamic> pelanggan) {
-                              return DropdownMenuItem<Map<String, dynamic>>(
-                                value: pelanggan,
-                                child: Text(pelanggan['namaPelanggan']),
-                              );
-                            }).toList(),
-                          ),
-                        ]),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Total Pesanan",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              "Rp. $totalPesanan",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        MaterialButton(
-                          elevation: 2,
-                          onPressed: () {
-                            if (listPesanan.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Belum ada pesanan!"),
-                                ),
-                              );
-                              return;
-                            }
+              _buildBottomPanel(),
+            ],
+          ),
+          if (showDropdown) _buildProductDropdown(),
+        ],
+      ),
+    );
+  }
 
-                            showDialog(
-                              context: context,
-                              builder: (context) => StrukDialog(
-                                selectedPelanggan: selectedPelanggan,
-                                listPesanan: listPesanan,
-                                totalPesanan: totalPesanan,
-                                onCancel: () => Navigator.pop(context),
-                                // Di bagian onConfirm dalam Transaksi.dart
-                                onConfirm: () async {
-                                  try {
-                                    final transactionService =
-                                        TransactionService();
-
-                                    await transactionService.addTransaction(
-                                      totalHarga: totalPesanan,
-                                      cartItems: listPesanan,
-                                      pelangganID:
-                                          selectedPelanggan?['pelangganID'],
-                                    );
-
-                                    // Reset state setelah transaksi berhasil
-                                    setState(() {
-                                      listPesanan.clear();
-                                      totalPesanan = 0;
-                                      selectedPelanggan = null;
-                                    });
-
-                                    Navigator.pop(context);
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('Transaksi berhasil dicatat!'),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    Navigator.pop(context);
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(e.toString()),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                          color: const Color(0xffaadb83),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          textColor: const Color(0xffffffff),
-                          minWidth: 140,
-                          height: 40,
-                          child: const Text(
-                            "Lanjutkan",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
+  Widget _buildBottomPanel() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0x4dffffff), width: 1),
+      ),
+      child: Column(
+        children: [
+          DropdownButton<Map<String, dynamic>>(
+            value: selectedPelanggan,
+            hint: const Text("Pilih Pelanggan"),
+            onChanged: (newValue) {
+              if (mounted) {
+                setState(() => selectedPelanggan = newValue);
+              }
+            },
+            items: listPelanggan
+                .map((pelanggan) => DropdownMenuItem(
+                      value: pelanggan,
+                      child: Text(pelanggan['namaPelanggan']),
+                    ))
+                .toList(),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Total Pesanan",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
                     ),
-                  ],
+                  ),
+                  Text(
+                    "Rp. $totalPesanan",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              MaterialButton(
+                onPressed: _handleTransaction,
+                color: const Color(0xffaadb83),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  "Lanjutkan",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
-          if (showDropdown)
-            Positioned(
-              left: 10,
-              right: 10,
-              top: 70,
-              child: Material(
-                elevation: 4,
-                child: Container(
-                  color: Colors.white,
-                  child: filteredProduk.isEmpty
-                      ? const ListTile(
-                          title: Text("Tidak ada produk yang ditemukan"),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: filteredProduk.length,
-                          itemBuilder: (context, index) {
-                            final produk = filteredProduk[index];
-                            return ListTile(
-                              title: Text(produk['namaProduk']),
-                              subtitle: Text(
-                                  'Rp. ${produk['harga']} - Stok ${produk['stok']}'),
-                              onTap: () {
-                                addToCart(produk);
-                                _produkController.text = produk['namaProduk'];
-                                setState(() {
-                                  showDropdown = false;
-                                });
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ),
-            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProductDropdown() {
+    return Positioned(
+      left: 10,
+      right: 10,
+      top: 70,
+      child: Material(
+        elevation: 4,
+        child: Container(
+          color: Colors.white,
+          child: filteredProduk.isEmpty
+              ? const ListTile(title: Text("Tidak ada produk yang ditemukan"))
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: filteredProduk.length,
+                  itemBuilder: (context, index) {
+                    final produk = filteredProduk[index];
+                    return ListTile(
+                      title: Text(produk['namaProduk']),
+                      subtitle: Text(
+                          'Rp. ${produk['harga']} - Stok ${produk['stok']}'),
+                      onTap: () {
+                        if (mounted) {
+                          setState(() {
+                            addToCart(produk);
+                            _produkController.clear();
+                            showDropdown = false;
+                          });
+                        }
+                      },
+                    );
+                  },
+                ),
+        ),
+      ),
+    );
+  }
+
+  void _handleTransaction() {
+    if (listPesanan.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Belum ada pesanan!")),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => StrukDialog(
+        selectedPelanggan: selectedPelanggan,
+        listPesanan: listPesanan,
+        totalPesanan: totalPesanan,
+        onCancel: () => Navigator.pop(context),
+        onConfirm: () async {
+          try {
+            final transactionService = TransactionService();
+            await transactionService.addTransaction(
+              totalHarga: totalPesanan,
+              cartItems: listPesanan,
+              pelangganID: selectedPelanggan?['pelangganID'],
+            );
+
+            if (mounted) {
+              // Tambahkan pengecekan mounted
+              setState(() {
+                listPesanan.clear();
+                totalPesanan = 0;
+                selectedPelanggan = null;
+              });
+            }
+
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Transaksi berhasil!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } catch (e) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
       ),
     );
   }

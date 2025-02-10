@@ -5,9 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
-    url: 'https://bbwqnewusgvvdoysgdlv.supabase.co',
+    url: 'https://nnwssjksazpzovipomdu.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJid3FuZXd1c2d2dmRveXNnZGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYxMjU0ODIsImV4cCI6MjA1MTcwMTQ4Mn0.wpZyGtRfwPboj9A5bRSm8li8lW9fY76b_Z6-rTyGxo0',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3NzamtzYXpwem92aXBvbWR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4MjEyMTcsImV4cCI6MjA1NDM5NzIxN30.NaRYqY9ruxt-oLlQ_KlInJptbYtmRT3P2z6mhZ1KIjQ',
   );
   runApp(const MyApp());
 }
